@@ -1,0 +1,3 @@
+[submodule "farfalle"]
+	path = farfalle
+	url = git@github.com:rashadphz/farfalle.git
