@@ -57,13 +57,35 @@ RUN curl -fsSL https://ollama.com/install.sh | sh
 # RUN systemctl daemon-reload
 # RUN systemctl enable ollama
 
-#installing llama3
-RUN ollama serve &
-# RUN ollama pull llama3
+
+# SearxNG installation
+WORKDIR /workspace/searxng
+
+# Install searxng dependencies
+RUN apt-get install -y \
+    python3-dev python3-babel python3-venv \
+    uwsgi uwsgi-plugin-python3 \
+    git build-essential libxslt-dev zlib1g-dev libffi-dev libssl-dev
+
+RUN git clone https://github.com/searxng/searxng.git .
+
+RUN pip3 install -U pip setuptools wheel pyyaml
+
+RUN pip3 install .
+
+COPY /farfalle/searxng/uwsgi.ini /workspace/searxng/uwsgi.ini
+COPY /farfalle/searxng/settings.yml /workspace/searxng/settings.yml
+COPY /farfalle/searxng/limiter.toml /workspace/searxng/limiter.toml
+
+WORKDIR /workspace
 
 COPY ./startup.sh /workspace/startup.sh
 RUN chmod +x /workspace/startup.sh
 
 EXPOSE 8000
+ENV ENABLE_LOCAL_MODELS=True
+ENV SEARCH_PROVIDER=searxng
+ENV SEARXNG_BASE_URL=http://localhost:8080
+ENV OLLAMA_HOST=http://localhost:11434
 
 CMD ["./startup.sh"]
